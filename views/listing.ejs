@@ -1,0 +1,20 @@
+<form id="reviewForm">
+  <textarea name="review" class="form-control" placeholder="Write your review..." required></textarea>
+  <button type="submit" class="btn btn-primary mt-2">Submit Review</button>
+</form>
+
+<!-- 🗂 Review List -->
+<div id="reviewList" class="mt-4">
+  <!-- Reviews will appear here -->
+</div>
+
+<!-- 🧠 AI Summary Card -->
+<div class="card mt-4" id="summaryCard" style="display:none;">
+  <div class="card-header">Guest Review Summary</div>
+  <div class="card-body">
+    <p id="reviewSummary">No summary yet.</p>
+  </div>
+</div>
+
+<!-- JS -->
+<script src="/js/reviews.js"></script>
