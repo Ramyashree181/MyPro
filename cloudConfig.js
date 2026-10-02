@@ -1,5 +1,4 @@
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 //joining our backend with our cloudinary account
 cloudinary.config({
@@ -9,14 +8,26 @@ cloudinary.config({
     api_secret:process.env.CLOUD_API_SECRET
 });
 
-//konse folder me we want to store our info on cloudinary
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'wonderlust_DEV',
-    allowedFormats:["png" , "jpg" , "jpeg" ],
+const storage = {
+  _handleFile(req, file, callback) {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'wonderlust_DEV',
+        allowed_formats: ['png', 'jpg', 'jpeg'],
+      },
+      (error, result) => {
+        if (error) return callback(error);
+        callback(null, { path: result.secure_url, filename: result.public_id });
+      }
+    );
+    file.stream.pipe(uploadStream);
   },
-});
+
+  _removeFile(req, file, callback) {
+    cloudinary.uploader.destroy(file.filename, { invalidate: true })
+      .then(() => callback(null), callback);
+  },
+};
 
 module.exports={
     cloudinary,

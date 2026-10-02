@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -10,9 +11,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "cloudinary": "^1.41.3",
+    "@aws-crypto/sha256-js": "^5.2.0",
+    "cloudinary": "^2.11.0",
     "cohere-ai": "^7.19.0",
     "connect-flash": "^0.1.1",
+    "connect-mongo": "^6.0.0",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "ejs-mate": "^4.0.0",
@@ -21,9 +24,7 @@
     "joi": "^18.0.1",
     "method-override": "^3.0.0",
     "mongoose": "^8.19.0",
-    "mongose": "^0.0.2-security",
     "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "passport-local-mongoose": "^8.0.0"

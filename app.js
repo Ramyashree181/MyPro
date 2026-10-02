@@ -1,4 +1,4 @@
-if(process.env.NODE_ENV != "production") {
+if (process.env.NODE_ENV !== "production") {
     require("dotenv").config();
 }
 const express = require('express');
@@ -8,8 +8,8 @@ const summarizeRoute = require('./routes/summarize');
 
 
 const mongoose = require('mongoose');
+const { MongoStore } = require('connect-mongo');
 const ejs = require('ejs');
-const Listing = require('./models/listing.js');
 const path = require('path');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
@@ -23,22 +23,21 @@ const flash = require('connect-flash');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user.js');
-const multer = require('multer');    // db dont understand that form is sending file so to we have to use this pkg
-const upload = multer({dest : "uploads/"});
 
 const userRouter = require('./routes/user.js');
 const listingRouter = require('./routes/listing.js');
 const reviewRouter = require('./routes/review.js');
 
-// Database connection
-main().then(() => {
-    console.log('Database connection successful');
-}).catch(err => {
-    console.error('Database connection error:', err);
-});
+const isProduction = process.env.NODE_ENV === 'production';
+const mongoUri = process.env.MONGODB_URI || (isProduction ? undefined : 'mongodb://localhost:27017/wonderLust');
+const sessionSecret = process.env.SESSION_SECRET || (isProduction ? undefined : 'local-development-secret');
+const port = Number(process.env.PORT) || 8080;
 
-async function main() {
-    await mongoose.connect('mongodb://localhost:27017/wonderLust');
+if (!mongoUri) {
+    throw new Error('MONGODB_URI must be set in production.');
+}
+if (!sessionSecret) {
+    throw new Error('SESSION_SECRET must be set in production.');
 }
 
 // Static files, body parsing and method override (mounted before routers)
@@ -47,19 +46,28 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // ✅ This enables JSON parsing for POST requests
 app.use(methodOverride('_method'));
 
+if (isProduction) {
+    app.set('trust proxy', 1);
+}
+
 const sessionOptions = {
-    secret : "mysupersecretkey",
-    resave : false,
-    saveUninitialized : true,
-    cookie : {
-        expires : Date.now() + 7 * 24 * 60 * 60 * 1000,
-        maxAge : 7 * 24 * 60 * 60 * 1000,
-        httpOnly : true,
+    secret: sessionSecret,
+    store: MongoStore.create({
+        mongoUrl: mongoUri,
+        collectionName: 'sessions',
+    }),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
     },
 };
 
 app.get('/', (req, res) => {
-    res.send('Hello World');
+    res.redirect('/listings');
 });
 
 app.use(session(sessionOptions));
@@ -79,16 +87,6 @@ app.use((req, res, next) => {
     next();
 });
 
-//demo user route to create a user
-app.get("/demouser" , async (req, res) => {
-    const fakeUser = new User({
-        email:"abcd@gmail.com",
-        username:"abcd"
-    });
-    let registeredUser = await User.register(fakeUser , "abcd1234" )
-    res.send(registeredUser);
-});
-    
 app.use('/listings', listingRouter); // Use the listings routes
 app.use('/listings/:id/reviews', reviewRouter); // Use the reviews routes
 app.use('/', userRouter); // Use the user routes 
@@ -107,7 +105,15 @@ app.use((err, req, res, next) => {
     // res.status(statuscode).send(message);
 });
 
-// Start the server
-app.listen(8080, () => {
-    console.log('Server is running on port 8080');
+async function startServer() {
+    await mongoose.connect(mongoUri);
+    console.log('Database connection successful');
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+}
+
+startServer().catch(err => {
+    console.error('Application startup failed:', err);
+    process.exit(1);
 });

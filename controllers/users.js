@@ -4,7 +4,7 @@ module.exports.renderSignupForm = (req, res) => {
     res.render("users/signup");
 }
 
-module.exports.signup = async (req, res) => {
+module.exports.signup = async (req, res, next) => {
   try{
     let { username, email , password } = req.body;
     const newUser = new User({ username, email });
@@ -32,7 +32,7 @@ module.exports.login = async (req, res) => {
     res.redirect(res.locals.redirectUrl || "/listings"); //mw.js is not triggered if you click login buttom directly from listings page
 }
 
-module.exports.logout = (req, res) => {
+module.exports.logout = (req, res, next) => {
     req.logout((err) => {
         if (err) {
             return next(err);

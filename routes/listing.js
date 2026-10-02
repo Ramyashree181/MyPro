@@ -8,7 +8,10 @@ const { isLoggedIn , isOwner , validateListing } = require('../middleware.js'); 
 const listingController = require("../controllers/listings.js");
 const multer = require('multer');    // db dont understand that form is sending file so to we have to use this pkg
 const {storage} = require("../cloudConfig.js");
-const upload = multer({storage});
+const upload = multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+});
 
 // Router.route - a way to group together routes with diff verbs(get,post,delete) but same payh
 
@@ -19,8 +22,8 @@ router.route("/")
     //create route
     .post(
         isLoggedIn ,
-        validateListing ,
         upload.single('listing[image]'),
+        validateListing ,
         wrapAsync( listingController.createlisting )
     );
 
